@@ -14,6 +14,21 @@ class Face(object):
         pass
     
     def __str__(self):
+        '''
+>>> f = Face(1)
+
+>>> print str(f) # doctest: +NORMALIZE_WHITESPACE
+_____________
+|   |   |   |
+| 1 | 1 | 1 |
+|___|___|___|
+|   |   |   |
+| 1 | 1 | 1 |
+|___|___|___|
+|   |   |   |
+| 1 | 1 | 1 |
+|___|___|___|      
+        '''
         ret = ''
         ret += self._get_up_separator()
         for r in range(3):            
@@ -38,8 +53,43 @@ class Cube(object):
             self.faces.append(Face(i))
         pass
     
-    def __str__(self):
-        # prepare faces string representations
+    def __str__(self):        
+       '''
+>>> c = Cube()
+>>> print str(c) # doctest: +NORMALIZE_WHITESPACE
+             _____________                          
+             |   |   |   |                          
+             | 3 | 3 | 3 |                          
+             |___|___|___|                          
+             |   |   |   |                          
+             | 3 | 3 | 3 |                          
+             |___|___|___|                          
+             |   |   |   |                          
+             | 3 | 3 | 3 |                          
+             |___|___|___|                          
+____________________________________________________
+|   |   |   ||   |   |   ||   |   |   ||   |   |   |
+| 0 | 0 | 0 || 1 | 1 | 1 || 5 | 5 | 5 || 4 | 4 | 4 |
+|___|___|___||___|___|___||___|___|___||___|___|___|
+|   |   |   ||   |   |   ||   |   |   ||   |   |   |
+| 0 | 0 | 0 || 1 | 1 | 1 || 5 | 5 | 5 || 4 | 4 | 4 |
+|___|___|___||___|___|___||___|___|___||___|___|___|
+|   |   |   ||   |   |   ||   |   |   ||   |   |   |
+| 0 | 0 | 0 || 1 | 1 | 1 || 5 | 5 | 5 || 4 | 4 | 4 |
+|___|___|___||___|___|___||___|___|___||___|___|___|
+             _____________                          
+             |   |   |   |                          
+             | 2 | 2 | 2 |                          
+             |___|___|___|                          
+             |   |   |   |                          
+             | 2 | 2 | 2 |                          
+             |___|___|___|                          
+             |   |   |   |                          
+             | 2 | 2 | 2 |                          
+             |___|___|___| 
+             
+             '''
+       # prepare faces string representations
        faces_strs = []
        for i in range(6):
            faces_strs.append(str(self.faces[i]))
@@ -50,12 +100,12 @@ class Cube(object):
        for line in faces_strs[3].split('\n'):
            ret += empty_line + line + 2*empty_line+'\n'
        for a,b,c,d in zip(faces_strs[0].split('\n'),faces_strs[1].split('\n'),
-                          faces_strs[5].split('\n'),faces_strs[4].split('\n')):
-           ret += a + b + c + d + '\n'
+                      faces_strs[5].split('\n'),faces_strs[4].split('\n')):
+                          ret += a + b + c + d + '\n'
        
        for line in faces_strs[2].split('\n'):
            ret += empty_line + line + 2*empty_line+'\n'
-           
+       
        return ret
                               
        
@@ -63,9 +113,7 @@ class Cube(object):
         
 ###############################################        
 if __name__ == '__main__':
-    f = Face(1)
-    print str(f)
-    print 30*'='+'\n'
-    c = Cube()
-    print str(c)
+    import doctest
+    doctest.testmod()
+
         
