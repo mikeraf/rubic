@@ -7,6 +7,9 @@ Created on Sun Oct 26 20:38:26 2014
 import string
 import itertools                
 
+__all__ = ['Face','Cube']
+
+
 class Face(object):
     N = 0
     E = 1
@@ -23,9 +26,13 @@ class Face(object):
             raise TypeError('val should be either int or list of ints with length 9')                
         self.neighbors = [None for i in range(4)] # N,E,S,W
         pass
-    #---------------------------------------------------------------    
+    #---------------------------------------------------------------  
+    def get_vals(self):
+        '''return a flat list of faces values'''
+        return list(itertools.chain.from_iterable(self.vals))
+    #---------------------------------------------------------------
     def copy(self):
-        return Face(list(itertools.chain.from_iterable(self.vals)))
+        return Face(self.get_vals())
     #---------------------------------------------------------------    
     def set_neighbors(self, neighbors, sides):
         ''' neighbors is a list of Face objects on N,E,S,W orientations
@@ -134,9 +141,9 @@ _____________
         return 3*'|   ' + '|\n' + '| %d | %d | %d |'%tuple(self.vals[row][:]) + '\n'
     pass
 
-
+###########################################################################
 class Cube(object):
-    
+    #--------------------------------------------------------------- 
     def __init__(self):
         faces = []
         for i in xrange(6):
@@ -158,7 +165,7 @@ class Cube(object):
         self.faces = faces
                                     
         pass
-    
+    #--------------------------------------------------------------- 
     def __str__(self):        
         '''
 >>> c = Cube()
@@ -213,7 +220,7 @@ ____________________________________________________
             ret += empty_line + line + 2*empty_line+'\n'
         
         return ret
-       
+    #---------------------------------------------------------------    
     def rotate(self, face_ind, nquarters):
         '''Rotate face with index :face_ind: by :nquarters: quarter spins.
        positive :nquarters: is clockwise while negative is counter-clockwise.
@@ -316,7 +323,9 @@ True
         for i in range(4):
             face.set_neighbor_edge_vals(i, neighbor_edges[i])
         pass
-                            
+    #--------------------------------------------------------------- 
+    def get_face(self, n):
+        return self.faces[n]
        
        
         
