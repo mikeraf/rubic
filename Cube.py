@@ -5,6 +5,7 @@ Created on Sun Oct 26 20:38:26 2014
 @author: michar
 """
 import string
+import itertools                
 
 class Face(object):
     N = 0
@@ -22,6 +23,9 @@ class Face(object):
             raise TypeError('val should be either int or list of ints with length 9')                
         self.neighbors = [None for i in range(4)] # N,E,S,W
         pass
+    #---------------------------------------------------------------    
+    def copy(self):
+        return Face(list(itertools.chain.from_iterable(self.vals)))
     #---------------------------------------------------------------    
     def set_neighbors(self, neighbors, sides):
         ''' neighbors is a list of Face objects on N,E,S,W orientations
@@ -52,7 +56,7 @@ class Face(object):
             return None
         (neighbor, nside) = self.neighbors[side]
         if nside == self.N:
-            return list(reversed(neighbor.vals[0][:]))
+            return neighbor.vals[0][::-1]
         elif nside == self.E:
             return [neighbor.vals[i][-1] for i in reversed(range(3))]
         elif nside == self.S:
@@ -61,18 +65,43 @@ class Face(object):
             return [neighbor.vals[i][0] for i in range(3)]
     #---------------------------------------------------------------
     def set_neighbor_edge_vals(self, side, vals):
+        '''
+    get the values on the edge on the given side assuming clockwise 
+    direction.
+        >>> f =  Face(range(9)) 
+        >>> f.set_neighbors([f.copy() for d in range(4)], [f.S, f.W, f.N, f.E])
+        >>> n = f.get_neighbor_edge_vals(f.N)
+        >>> f.set_neighbor_edge_vals(f.N,[2*i for i in n])
+        >>> f.get_neighbor_edge_vals(f.N)
+        [12, 14, 16]
+        >>> e = f.get_neighbor_edge_vals(f.E)
+        >>> f.set_neighbor_edge_vals(f.E,[2*i for i in e])
+        >>> f.get_neighbor_edge_vals(f.E)
+        [0, 6, 12]
+        >>> s = f.get_neighbor_edge_vals(f.S)
+        >>> f.set_neighbor_edge_vals(f.S,[2*i for i in s])
+        >>> f.get_neighbor_edge_vals(f.S)
+        [4, 2, 0]
+        >>> w = f.get_neighbor_edge_vals(f.W)
+        >>> f.set_neighbor_edge_vals(f.W,[2*i for i in w])
+        >>> f.get_neighbor_edge_vals(f.W)
+        [16, 10, 4]
+        '''        
         assert(len(vals) == 3)
-        #if self.neighbors[side] is None:
-            #return None
-        #(neighbor, nside) = self.neighbors[side]
-        #if nside == self.N:
-            #return list(reversed(neighbor.vals[0][:]))
-        #elif nside == self.E:
-            #return [neighbor.vals[i][-1] for i in reversed(range(3))]
-        #elif nside == self.S:
-            #return neighbor.vals[-1][:]
-        #elif nside == self.W:
-            #return [neighbor.vals[i][0] for i in range(3)]
+        if self.neighbors[side] is None:
+            return
+        (neighbor, nside) = self.neighbors[side]
+        if nside == self.N:
+            for i,j in zip(reversed(range(3)),range(3)):
+                neighbor.vals[0][i] = vals[j]
+        elif nside == self.E:
+            for i,j in zip(reversed(range(3)),range(3)):
+                neighbor.vals[i][-1] = vals[j]
+        elif nside == self.S:
+            neighbor.vals[-1][:] = vals
+        elif nside == self.W:
+            for i in range(3):
+                neighbor.vals[i][0] = vals[i]
         
     #---------------------------------------------------------------        
     def __str__(self):
@@ -185,82 +214,108 @@ ____________________________________________________
         
         return ret
        
-    #def rotate(face_ind, nquarters):
-        #'''Rotate face with index face_ind by nquarters quarter spins.
-       #positive nquarters is clockwise while negative is counter-clockwise.
-       #Note that nquarters are equal modulo 4.
+    def rotate(self, face_ind, nquarters):
+        '''Rotate face with index :face_ind: by :nquarters: quarter spins.
+       positive :nquarters: is clockwise while negative is counter-clockwise.
+       Note that :nquarters: are equal modulo 4.
        
-#>>> c = Cube()
-#>>> c.rotate(1,1)
-#>>> print str(c) # doctest: +NORMALIZE_WHITESPACE
-             #_____________                          
-             #|   |   |   |                          
-             #| 3 | 3 | 3 |                          
-             #|___|___|___|                          
-             #|   |   |   |                          
-             #| 3 | 3 | 3 |                          
-             #|___|___|___|                          
-             #|   |   |   |                          
-             #| 0 | 0 | 0 |                          
-             #|___|___|___|                          
-#____________________________________________________
-#|   |   |   ||   |   |   ||   |   |   ||   |   |   |
-#| 0 | 0 | 2 || 1 | 1 | 1 || 3 | 5 | 5 || 4 | 4 | 4 |
-#|___|___|___||___|___|___||___|___|___||___|___|___|
-#|   |   |   ||   |   |   ||   |   |   ||   |   |   |
-#| 0 | 0 | 2 || 1 | 1 | 1 || 3 | 5 | 5 || 4 | 4 | 4 |
-#|___|___|___||___|___|___||___|___|___||___|___|___|
-#|   |   |   ||   |   |   ||   |   |   ||   |   |   |
-#| 0 | 0 | 2 || 1 | 1 | 1 || 3 | 5 | 5 || 4 | 4 | 4 |
-#|___|___|___||___|___|___||___|___|___||___|___|___|
-             #_____________                          
-             #|   |   |   |                          
-             #| 5 | 5 | 5 |                          
-             #|___|___|___|                          
-             #|   |   |   |                          
-             #| 2 | 2 | 2 |                          
-             #|___|___|___|                          
-             #|   |   |   |                          
-             #| 2 | 2 | 2 |                          
-             #|___|___|___|        
+>>> c1 = Cube()
+>>> c1.rotate(1,1)
+>>> print str(c1) # doctest: +NORMALIZE_WHITESPACE
+             _____________                          
+             |   |   |   |                          
+             | 3 | 3 | 3 |                          
+             |___|___|___|                          
+             |   |   |   |                          
+             | 3 | 3 | 3 |                          
+             |___|___|___|                          
+             |   |   |   |                          
+             | 0 | 0 | 0 |                          
+             |___|___|___|                          
+____________________________________________________
+|   |   |   ||   |   |   ||   |   |   ||   |   |   |
+| 0 | 0 | 2 || 1 | 1 | 1 || 3 | 5 | 5 || 4 | 4 | 4 |
+|___|___|___||___|___|___||___|___|___||___|___|___|
+|   |   |   ||   |   |   ||   |   |   ||   |   |   |
+| 0 | 0 | 2 || 1 | 1 | 1 || 3 | 5 | 5 || 4 | 4 | 4 |
+|___|___|___||___|___|___||___|___|___||___|___|___|
+|   |   |   ||   |   |   ||   |   |   ||   |   |   |
+| 0 | 0 | 2 || 1 | 1 | 1 || 3 | 5 | 5 || 4 | 4 | 4 |
+|___|___|___||___|___|___||___|___|___||___|___|___|
+             _____________                          
+             |   |   |   |                          
+             | 5 | 5 | 5 |                          
+             |___|___|___|                          
+             |   |   |   |                          
+             | 2 | 2 | 2 |                          
+             |___|___|___|                          
+             |   |   |   |                          
+             | 2 | 2 | 2 |                          
+             |___|___|___|        
 
-#>>> c2 = Cube()
-#>>> c2.rotate(1,2)
-#>>> print str(c2)  # doctest: +NORMALIZE_WHITESPACE
-             #_____________                          
-             #|   |   |   |                          
-             #| 3 | 3 | 3 |                          
-             #|___|___|___|                          
-             #|   |   |   |                          
-             #| 3 | 3 | 3 |                          
-             #|___|___|___|                          
-             #|   |   |   |                          
-             #| 2 | 2 | 2 |                          
-             #|___|___|___|                          
-#____________________________________________________
-#|   |   |   ||   |   |   ||   |   |   ||   |   |   |
-#| 0 | 0 | 5 || 1 | 1 | 1 || 0 | 5 | 5 || 4 | 4 | 4 |
-#|___|___|___||___|___|___||___|___|___||___|___|___|
-#|   |   |   ||   |   |   ||   |   |   ||   |   |   |
-#| 0 | 0 | 5 || 1 | 1 | 1 || 0 | 5 | 5 || 4 | 4 | 4 |
-#|___|___|___||___|___|___||___|___|___||___|___|___|
-#|   |   |   ||   |   |   ||   |   |   ||   |   |   |
-#| 0 | 0 | 5 || 1 | 1 | 1 || 0 | 5 | 5 || 4 | 4 | 4 |
-#|___|___|___||___|___|___||___|___|___||___|___|___|
-             #_____________                          
-             #|   |   |   |                          
-             #| 3 | 3 | 3 |                          
-             #|___|___|___|                          
-             #|   |   |   |                          
-             #| 2 | 2 | 2 |                          
-             #|___|___|___|                          
-             #|   |   |   |                          
-             #| 2 | 2 | 2 |                          
-             #|___|___|___|        
-      
-       #'''
+>>> c2 = Cube()
+>>> c2.rotate(1,2)
+>>> print str(c2)  # doctest: +NORMALIZE_WHITESPACE
+             _____________                          
+             |   |   |   |                          
+             | 3 | 3 | 3 |                          
+             |___|___|___|                          
+             |   |   |   |                          
+             | 3 | 3 | 3 |                          
+             |___|___|___|                          
+             |   |   |   |                          
+             | 2 | 2 | 2 |                          
+             |___|___|___|                          
+____________________________________________________
+|   |   |   ||   |   |   ||   |   |   ||   |   |   |
+| 0 | 0 | 5 || 1 | 1 | 1 || 0 | 5 | 5 || 4 | 4 | 4 |
+|___|___|___||___|___|___||___|___|___||___|___|___|
+|   |   |   ||   |   |   ||   |   |   ||   |   |   |
+| 0 | 0 | 5 || 1 | 1 | 1 || 0 | 5 | 5 || 4 | 4 | 4 |
+|___|___|___||___|___|___||___|___|___||___|___|___|
+|   |   |   ||   |   |   ||   |   |   ||   |   |   |
+| 0 | 0 | 5 || 1 | 1 | 1 || 0 | 5 | 5 || 4 | 4 | 4 |
+|___|___|___||___|___|___||___|___|___||___|___|___|
+             _____________                          
+             |   |   |   |                          
+             | 3 | 3 | 3 |                          
+             |___|___|___|                          
+             |   |   |   |                          
+             | 2 | 2 | 2 |                          
+             |___|___|___|                          
+             |   |   |   |                          
+             | 2 | 2 | 2 |                          
+             |___|___|___| 
+             
+>>> c3 = Cube()
+>>> c3.rotate(1,-2)
+>>> str(c3) == str(c2)
+True
+>>> c3.rotate(1,-1)
+>>> str(c3) == str(c1)
+True
+
+        '''
+        def rotate(l, n):
+            if n==0:
+                return l
+            n = -n % len(l)            
+            return l[n:] + l[:n]
         
-    #pass
+        neighbor_edges = []
+        face = self.faces[face_ind]
+        # get all neighbor edges
+        for i in range(4):
+            edge = face.get_neighbor_edge_vals(i)
+            neighbor_edges.append(edge)
+        
+        # rotate the edges according to nquarters
+        neighbor_edges = rotate(neighbor_edges, nquarters)
+        
+        # set back the edges
+        for i in range(4):
+            face.set_neighbor_edge_vals(i, neighbor_edges[i])
+        pass
                             
        
        
