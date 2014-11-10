@@ -47,7 +47,10 @@ class EntropicSolver(object):
         estimator = self.entropy_estimator
         
         moves = []
+        should_break = False
         for f in xrange(6):
+            if should_break:
+                break
             for n in xrange(1,4,1): 
                 if face == f:
                     continue
@@ -67,6 +70,7 @@ class EntropicSolver(object):
                     if recuring:
                         return moves
                     else:
+                        should_break = True
                         break
                     pass
                 pass
@@ -80,6 +84,9 @@ class EntropicSolver(object):
         return moves    
     #---------------------------------------------------------
     def _perform_single_step(self, max_backtracking):
+        '''Try to perform single step to reduce entropy.
+        return whether succeeded.
+        '''
         cube = self.cube
         estimator = self.entropy_estimator        
         
@@ -91,35 +98,38 @@ class EntropicSolver(object):
         reduced = self._try_reduce_entropy()    
         if reduced:
             print 'succeeded to reduce!'
-            return
+            return True
         else:
             for depth in range(1, max_backtracking+1):
                 print 'Trying backtracking: depth=%d...'%depth
                 steps = self._try_backtracking(entropy, depth=depth)
                 if steps:
                     print 'Success!'
+                    return True
                 else:       
                     print 'Failed!' 
-                    pass
-                pass      
+                    continue
+                pass 
+            return False
         
         
     #---------------------------------------------------------    
     def solve(self, max_steps=100, max_backtracking=3):
-        if self.cur_entropy == 0.0:
-            return
-        finished = False
+        success = True
         step = 0
-        while not finished and step < max_steps:
-            finished = self._perform_single_step(max_backtracking)
-        if finished:
+        while success and step < max_steps:
+            if self.cur_entropy == 0.0:
+                break
+            success = self._perform_single_step(max_backtracking)
+            
+        if success:
             print "Success!"
         else:
             print "Fail!"
     
 def main():
     c = Cube()
-    randomize(c, 5)
+    randomize(c, 3)
     print c
     solver = EntropicSolver(c, BasicEntropyEstimator())
     solver.solve()
