@@ -126,7 +126,75 @@ class EntropicSolver(object):
             print "Success!"
         else:
             print "Fail!"
+##################################################################
+
+class AidedEntropicSolver(EntropicSolver):
+    def __init__(self, cube, entropy_estimator, repo):
+        EntropicSolver.__init__(self, cube, entropy_estimator)
+        self.repo = repo
+        pass
     
+    def _try_in_repo(self):
+        key = self.cube.get_current_tuple_representation()
+        moves = self.repo.get(key)
+        cube = self.cube
+        estimator = self.entropy_estimator
+        if moves:
+            for move in reversed(moves):
+                f,n = move
+                self.cube.rotate(f,-n)
+            self.cur_entropy = estimator.get_configuration_entropy(cube)
+            assert(self.cur_entropy == 0.0)
+            print 'Found in DB'
+            return True
+        else:
+            return False
+    def _try_reduce_entropy(self):
+        if self._try_in_repo():
+            return True
+        else:
+            return EntropicSolver._try_reduce_entropy(self)
+    def _try_backtracking(self, cur_entropy, face=-1, depth=3, recuring=0):
+        cube = self.cube
+        estimator = self.entropy_estimator
+        
+        moves = []
+        should_break = False
+        for f in xrange(6):
+            if should_break:
+                break
+            for n in xrange(1,4,1): 
+                if face == f:
+                    continue
+                cube.rotate(f,n)
+                if depth > 0:
+                    sub_moves = self._try_backtracking(cur_entropy, f, depth-1, 
+                                                       recuring=1)
+                    if sub_moves:
+                        moves.append((f,n))                
+                        moves.extend(sub_moves)
+                else: 
+                    new_entropy = estimator.get_configuration_entropy(cube)
+                    if new_entropy < cur_entropy:
+                        moves.append((f,n))
+                cube.rotate(f,-n)
+                if moves:
+                    if recuring:
+                        return moves
+                    else:
+                        should_break = True
+                        break
+                    pass
+                pass
+            pass
+                
+        if not recuring and moves:
+            self.moves.extend(moves)
+            for move in moves:
+                cube.rotate(*move)
+            self.cur_entropy = estimator.get_configuration_entropy(cube)
+        return moves            
+###################################################################
 def main():
     c = Cube()
     randomize(c, 3)
@@ -134,6 +202,13 @@ def main():
     solver = EntropicSolver(c, BasicEntropyEstimator())
     solver.solve()
     print c
+def main_repo(repo):
+    c = Cube()
+    randomize(c, 100)
+    print c
+    solver = AidedEntropicSolver(c, BasicEntropyEstimator(), repo)
+    solver.solve()
+    print c    
 
 if __name__ == '__main__':
     main()

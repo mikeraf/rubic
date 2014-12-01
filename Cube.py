@@ -326,8 +326,18 @@ True
     #--------------------------------------------------------------- 
     def get_face(self, n):
         return self.faces[n]
-       
-       
+    #---------------------------------------------------------------    
+    def get_current_tuple_representation(self):
+        ''' 
+        >>> c=Cube()
+        >>> c.get_current_tuple_representation()
+        (0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5)
+        
+        '''
+        vals = []
+        for f in self.faces:
+            vals.extend(f.get_vals())
+        return tuple(vals)
         
 ###############################################        
 if __name__ == '__main__':
